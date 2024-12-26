@@ -2,29 +2,56 @@
 [CmdletBinding()]
 param (
     [Parameter()]
-    [string]
-    $keyword
+    [string[]]
+    $keywords
 
     # [Parameter()]
     # [string]
     # $ignore
 )
 
-$output = Get-ChildItem -Path G:\ReleasedDocuments\ -Recurse -Filter "*.pdf" | Where-Object { $_.Name -like "*$keyword*" }
+$output = $keywords | ForEach-Object {
+    $keyword = $_
+    Get-ChildItem -Path G:\ReleasedDocuments\ -Recurse -Filter "*.pdf" | Where-Object { $_.Name -like "*$keyword*" }    
+}
 
-# If files are found, open them with confirmation
 if ($output) {
-    $output | ForEach-Object {
-        # Prompt for confirmation before starting the process
-        $confirmation = Read-Host "Do you want to open $($_.Name)? (Y/N)"
-        
-        if ($confirmation -eq 'Y') {
-            Write-Output "Opening $($_.FullName)"
-            Start-Process $_.FullName
-        } else {
-            Write-Output "Skipped $($_.FullName)"
+    Write-Output "I will print the following files:"
+    $files = $output.FullName
+
+    $fileNames = $output.Name
+    $fileNames
+    
+    $confirmation = Read-Host "Confirm? (Y/N)"
+
+    if ($confirmation -eq 'Y') {
+        Write-Output "Printing..." 
+        $files | ForEach-Object {
+            Start-Process -FilePath $_ -Verb Print
         }
     }
-} else {
+    else {
+        Write-Host "Exiting..."
+        exit
+    }
+}
+else {
     Write-Output "No PDF files found matching the keyword."
 }
+
+# If files are found, open them with confirmation
+# if ($output) {
+#     $output | ForEach-Object {
+#         # Prompt for confirmation before starting the process
+#         $confirmation = Read-Host "Do you want to open $($_.Name)? (Y/N)"
+        
+#         if ($confirmation -eq 'Y') {
+#             Write-Output "Opening $($_.FullName)"
+#             Start-Process -FilePath $_.FullName -Verb Print
+#         } else {
+#             Write-Output "Skipped $($_.FullName)"
+#         }
+#     }
+# } else {
+#     Write-Output "No PDF files found matching the keyword."
+# }
